@@ -1,4 +1,7 @@
-var CACHE_STATIC_NAME = 'static-v14'
+importScripts('/src/js/idb.js');
+importScripts('/src/js/utility.js');
+
+var CACHE_STATIC_NAME = 'static-v18'
 var CACHE_DYNAMIC_NAME = 'dynamic-v2'
 var STATIC_FILES = [
     '/',
@@ -6,6 +9,7 @@ var STATIC_FILES = [
     '/offline.html',
     '/src/js/app.js',
     '/src/js/feed.js',
+    '/src/js/idb.js',
     '/src/js/promise.js',
     '/src/js/fetch.js',
     '/src/js/material.min.js',
@@ -16,6 +20,12 @@ var STATIC_FILES = [
     'https://fonts.googleapis.com/icon?family=Material+Icons',
     'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
+
+var dbPromise = idb.open('posts-store', 1, function(db) {
+    if (!db.objectStoreNames.contains('posts')) {
+        db.createObjectStore('posts', { keyPath: 'id' });
+    }
+});
 
 // function trimCache(cacheName, maxItems) {
 //     caches.open(cacheName)
@@ -59,7 +69,6 @@ self.addEventListener('activate', function(event) {
 function isInArray(string, array) {
     var cachePath;
     if (string.indexOf(self.origin) === 0) { // request targets domain where we serve the page from (i.e. NOT a CDN)
-        console.log('matched ', string);
         cachePath = string.substring(self.origin.length); // take the part of the URL AFTER the domain (e.g. after localhost:8080)
     } else {
         cachePath = string; // store the full request (for CDNs)
@@ -68,17 +77,25 @@ function isInArray(string, array) {
 }
 
 self.addEventListener('fetch', function(event) {
-    var url = 'https://httpbin.org/get';
-    if (event.request.url.indexOf(url) > -1) {
+    var url = 'https://pwagram-9c370-default-rtdb.europe-west1.firebasedatabase.app/posts';
+    if (event.request.url.indexOf("chrome-extension") !== -1) {
+        return;
+    }
+    else if (event.request.url.indexOf(url) > -1) {
         event.respondWith(
-            caches.open(CACHE_DYNAMIC_NAME)
-            .then(function(cache) {
-                return fetch(event.request)
-                    .then(function(res) {
-                        // trimCache(CACHE_DYNAMIC_NAME, 3);
-                        cache.put(event.request, res.clone());
-                        return res;
+            fetch(event.request)
+            .then(function(res) {
+                var clonedRes = res.clone();
+                clearAllData('posts')
+                    .then(function() {
+                        clonedRes.json();
+                    })
+                    .then(function(data) {
+                        for (var key in data) {
+                            writeData('posts', data[key]);
+                        }
                     });
+                return res;
             })
         );
     } else if (isInArray(event.request.url, STATIC_FILES)) {
