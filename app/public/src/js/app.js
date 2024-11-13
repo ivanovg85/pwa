@@ -10,9 +10,9 @@ if ('serviceWorker' in navigator) {
         .catch((err) => console.log('Service Worker NOT Registered', err))
 }
 
-// window.addEventListener('beforeinstallprompt', (event) => {
-//     console.log('beforeinstallprompt fired');
-//     event.preventDefault();
-//     deferredPrompt = event;
-//     return false;
-// });
+window.addEventListener('beforeinstallprompt', (event) => {
+    console.log('beforeinstallprompt fired');
+    event.preventDefault();
+    deferredPrompt = event;
+    return false;
+});

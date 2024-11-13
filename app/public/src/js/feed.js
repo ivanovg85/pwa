@@ -108,13 +108,13 @@ fetch(url)
     updateUI(dataArray);
   });
 
-  if ('indexedDB' in window) {
-    readAllData('posts')
-      .then(function(data) {
-        if (!networkDataReceived) {
-          console.log('From cache', data);
-          updateUI(data);
-        }
-      });
-  }
+if ('indexedDB' in window) {
+  readAllData('posts')
+    .then(function(data) {
+      if (!networkDataReceived) {
+        console.log('From cache', data);
+        updateUI(data);
+      }
+    });
+}
   

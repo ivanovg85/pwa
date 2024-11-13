@@ -21,12 +21,6 @@ var STATIC_FILES = [
     'https://cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.3.0/material.indigo-pink.min.css',
 ];
 
-var dbPromise = idb.open('posts-store', 1, function(db) {
-    if (!db.objectStoreNames.contains('posts')) {
-        db.createObjectStore('posts', { keyPath: 'id' });
-    }
-});
-
 // function trimCache(cacheName, maxItems) {
 //     caches.open(cacheName)
 //         .then(function(cache) {
@@ -88,7 +82,7 @@ self.addEventListener('fetch', function(event) {
                 var clonedRes = res.clone();
                 clearAllData('posts')
                     .then(function() {
-                        clonedRes.json();
+                        return clonedRes.json();
                     })
                     .then(function(data) {
                         for (var key in data) {
@@ -116,7 +110,7 @@ self.addEventListener('fetch', function(event) {
                                 // trimCache(CACHE_DYNAMIC_NAME, 3);
                                 cache.put(event.request.url, res.clone());
                                 return res;
-                            });
+                            })
                     })
                     .catch(function(err) {
                         return caches.open(CACHE_STATIC_NAME)
